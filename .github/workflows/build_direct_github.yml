@@ -1,0 +1,122 @@
+name: Build ROM Directly on GitHub Actions (No External Server Needed)
+
+on:
+  workflow_dispatch:
+    inputs:
+      rom_manifest:
+        description: 'ROM Manifest URL'
+        required: true
+        default: 'https://github.com/Lunaris-AOSP/android.git'
+      rom_branch:
+        description: 'ROM Branch'
+        required: true
+        default: '16.2'
+      device_codename:
+        description: 'Device Codename'
+        required: true
+        default: 'lexus'
+      build_type:
+        description: 'Build Type'
+        required: true
+        default: 'userdebug'
+      build_command:
+        description: 'Build Command'
+        required: true
+        default: 'm bacon'
+
+jobs:
+  build:
+    name: Build Lunaris AOSP for OnePlus Nord 5
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Free Disk Space (Maximize Runner Storage)
+        uses: easimon/maximize-build-space@master
+        with:
+          root-reserve-mb: 2048
+          swap-size-mb: 10240
+          remove-dotnet: 'true'
+          remove-android: 'true'
+          remove-haskell: 'true'
+          remove-docker-images: 'true'
+
+      - name: Install Build Tools & Dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            bc bison build-essential ccache curl flex g++-multilib gcc-multilib git git-lfs \
+            gnupg gperf imagemagick lib32readline-dev lib32z1-dev libelf-dev liblz4-tool \
+            libncurses5 libncurses5-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils \
+            lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev \
+            python3 python-is-python3 openjdk-17-jdk unzip libtinfo5 jq aria2
+
+          mkdir -p ~/bin
+          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+          chmod a+x ~/bin/repo
+          sudo ln -sf ~/bin/repo /usr/local/bin/repo
+
+          git config --global user.name "Lunaris Builder"
+          git config --global user.email "builder@nord5.local"
+
+      - name: Sync Source & Trees
+        run: |
+          mkdir -p ~/rom
+          cd ~/rom
+
+          echo "Initializing repo..."
+          repo init -u ${{ github.event.inputs.rom_manifest }} -b ${{ github.event.inputs.rom_branch }} --git-lfs --depth=1
+
+          echo "Applying OnePlus Nord 5 (lexus) local manifest..."
+          mkdir -p .repo/local_manifests
+          cp $GITHUB_WORKSPACE/manifests/nord5.xml .repo/local_manifests/nord5.xml
+
+          echo "Syncing code (shallow clone)..."
+          repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags --depth=1
+
+      - name: Compile Custom ROM
+        run: |
+          cd ~/rom
+          source build/envsetup.sh
+
+          echo "Lunching target..."
+          lunch lunaris_${{ github.event.inputs.device_codename }}-${{ github.event.inputs.build_type }} || \
+          lunch lineage_${{ github.event.inputs.device_codename }}-${{ github.event.inputs.build_type }} || \
+          lunch ${{ github.event.inputs.device_codename }}-${{ github.event.inputs.build_type }}
+
+          echo "Running build..."
+          ${{ github.event.inputs.build_command }} -j$(nproc --all)
+
+      - name: Generate Direct Mobile Download Link
+        id: upload_direct
+        run: |
+          ROM_FILE=$(ls ~/rom/out/target/product/${{ github.event.inputs.device_codename }}/*.zip 2>/dev/null | head -n 1)
+          if [ -f "$ROM_FILE" ]; then
+            echo "Found ROM file: $ROM_FILE"
+            echo "Uploading to bashupload..."
+            DOWNLOAD_URL=$(curl -s https://bashupload.com/ -T "$ROM_FILE")
+            echo "download_url=$DOWNLOAD_URL" >> $GITHUB_OUTPUT
+            echo "Direct Download Link: $DOWNLOAD_URL"
+          else
+            echo "No zip found!"
+          fi
+
+      - name: Publish Release on GitHub
+        uses: softprops/action-gh-release@v2
+        if: always()
+        with:
+          files: ~/rom/out/target/product/${{ github.event.inputs.device_codename }}/*.zip
+          name: "Lunaris AOSP for OnePlus Nord 5 (${{ github.event.inputs.device_codename }})"
+          tag_name: "v${{ github.run_id }}"
+          body: |
+            ## Lunaris AOSP Build for OnePlus Nord 5 (`${{ github.event.inputs.device_codename }}`)
+            - **Branch**: ${{ github.event.inputs.rom_branch }}
+            - **Target**: ${{ github.event.inputs.device_codename }}
+            - **Status**: Completed
+            - **Direct Download Link**: ${{ steps.upload_direct.outputs.download_url }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
