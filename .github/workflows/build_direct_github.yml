@@ -50,10 +50,10 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y \
             bc bison build-essential ccache curl flex g++-multilib gcc-multilib git git-lfs \
-            gnupg gperf imagemagick lib32readline-dev lib32z1-dev libelf-dev liblz4-tool \
-            libncurses5 libncurses5-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils \
+            gnupg gperf imagemagick lib32readline-dev lib32z1-dev libelf-dev lz4 \
+            libncurses-dev libssl-dev libxml2-utils \
             lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev \
-            python3 python-is-python3 openjdk-17-jdk unzip libtinfo5 jq aria2
+            python3 python-is-python3 openjdk-17-jdk unzip libtinfo6 jq aria2
 
           mkdir -p ~/bin
           curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
@@ -107,7 +107,7 @@ jobs:
 
       - name: Publish Release on GitHub
         uses: softprops/action-gh-release@v2
-        if: always()
+        if: success()
         with:
           files: ~/rom/out/target/product/${{ github.event.inputs.device_codename }}/*.zip
           name: "Lunaris AOSP for OnePlus Nord 5 (${{ github.event.inputs.device_codename }})"
