@@ -1,58 +1,37 @@
-# OnePlus Nord 5 (`lexus`) - Lunaris AOSP ROM Builder
+# OnePlus Nord 5 (`lexus`) - Lunaris AOSP Builder (100% Free on GitHub)
 
-Automated GitHub Actions CI/CD workflow to compile **Lunaris AOSP (Android 16.2)** for the **OnePlus Nord 5 (`lexus`)**.
-
----
-
-## 📁 Project Structure
-
-```text
-├── .github/
-│   └── workflows/
-│       ├── build_crave.yml          # Cloud build via Crave.io (Recommended & Free)
-│       └── build_self_hosted.yml    # Build on your own Linux server/runner
-├── manifests/
-│   └── nord5.xml                    # Local manifests for device, vendor, and kernel
-├── scripts/
-│   └── build_rom.sh                 # Unified build execution script
-└── README.md
-```
+Build **Lunaris AOSP (Android 16.2)** for **OnePlus Nord 5 (`lexus`)** directly on **GitHub Actions** without any credit card, VPS, or third-party approval!
 
 ---
 
-## 🚀 How to Run the Build (Step-by-Step)
+## ⚡ 3 Simple Steps to Build (No Card, No External Server)
 
-### Step 1: Create a GitHub Repository & Push this Code
-If you haven't pushed this repo to GitHub yet:
-1. Create a new empty repository on [GitHub](https://github.com/new) (e.g. `nord5-lunaris-builder`).
-2. Run these commands to push the code:
+### Step 1: Create a GitHub Repo & Push this Code
+1. Open [github.com/new](https://github.com/new) and create a repository (e.g. `nord5-lunaris-builder`).
+2. Run these commands:
    ```bash
-   git remote add origin https://github.com/<your-username>/<repo-name>.git
+   git remote add origin https://github.com/<YOUR_GITHUB_USERNAME>/<REPO_NAME>.git
    git branch -M main
    git push -u origin main
    ```
 
----
+### Step 2: Enable Workflow Write Permissions (10-second setting)
+1. Go to your GitHub repository **Settings** tab.
+2. Click **Actions** > **General** on the left menu.
+3. Scroll down to **Workflow permissions**.
+4. Select **"Read and write permissions"** and check **"Allow GitHub Actions to create and approve pull requests"**.
+5. Click **Save**.
 
-### Step 2: Setup Free Cloud Build Server (Crave.io)
-Android builds require ~300GB disk space and 16-32GB RAM. Crave.io gives this completely free for ROM building:
-1. Sign up for free at [crave.io](https://crave.io).
-2. Go to your **API Keys / Settings** and download your `crave.conf`.
-3. Open your GitHub Repository:
-   - Go to **Settings** > **Secrets and variables** > **Actions** > **New repository secret**.
-   - Name: `CRAVE_CONF`
-   - Value: Paste the entire content of your `crave.conf` file.
-
----
-
-### Step 3: Start the Build
-1. In your GitHub repository, click on the **Actions** tab.
-2. Under "Workflows" on the left sidebar, click **Build Custom ROM (Crave.io)**.
+### Step 3: Run the Build!
+1. Go to the **Actions** tab in your repository.
+2. In the left sidebar, click: **"Build ROM Directly on GitHub Actions (No External Server Needed)"**.
 3. Click the **Run workflow** button on the right.
-4. Leave the default settings (Target: `lexus`, Manifest: `Lunaris-AOSP/android.git`, Branch: `16.2`, Command: `m bacon`).
-5. Click **Run workflow**!
+4. Click the green **Run workflow** button.
 
 ---
 
-### 📦 Output
-Once the build completes (usually in ~35-50 minutes on Crave's 64-core runner), the finished flashable `.zip` file will be automatically uploaded to the GitHub Actions Artifacts section for download.
+## 📦 What Happens Next?
+1. The GitHub Action runner frees up ~70 GB disk space and creates a 10 GB swap file.
+2. It shallow-syncs Lunaris AOSP and OnePlus Nord 5 (`lexus`) trees (`device/oneplus/lexus`, `vendor`, `kernel`, `hardware/oplus`).
+3. It compiles the ROM using all runner cores.
+4. Once finished, it publishes the flashable ROM `.zip` under your GitHub repo's **Releases** page and prints a **Direct Mobile Download Link**!
