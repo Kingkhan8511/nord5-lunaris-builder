@@ -1,0 +1,67 @@
+name: Build Custom ROM (Crave.io)
+
+on:
+  workflow_dispatch:
+    inputs:
+      rom_manifest:
+        description: 'ROM Manifest URL'
+        required: true
+        default: 'https://github.com/Lunaris-AOSP/android.git'
+      rom_branch:
+        description: 'ROM Manifest Branch'
+        required: true
+        default: '16.2'
+      device_codename:
+        description: 'Device Codename'
+        required: true
+        default: 'lexus'
+      build_type:
+        description: 'Build Type (userdebug, user, eng)'
+        required: true
+        default: 'userdebug'
+      build_command:
+        description: 'Build Command (e.g., m bacon)'
+        required: true
+        default: 'm bacon'
+
+jobs:
+  build:
+    name: Compile ROM on Crave.io
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Crave Client
+        run: |
+          mkdir -p ~/.crave
+          echo "${{ secrets.CRAVE_CONF }}" > ~/.crave/crave.conf
+          curl -s https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh | bash -s --
+          sudo mv crave /usr/local/bin/
+
+      - name: Trigger Build on Crave
+        run: |
+          crave run -- "
+            set -e
+            rm -rf .repo/local_manifests
+            mkdir -p .repo/local_manifests
+            cp manifests/nord5.xml .repo/local_manifests/nord5.xml
+
+            repo init -u ${{ github.event.inputs.rom_manifest }} -b ${{ github.event.inputs.rom_branch }} --git-lfs
+            repo sync -c -j\$(nproc --all) --force-sync --no-clone-bundle --no-tags
+
+            source build/envsetup.sh
+            lunch lunaris_${{ github.event.inputs.device_codename }}-${{ github.event.inputs.build_type }} || lunch lineage_${{ github.event.inputs.device_codename }}-${{ github.event.inputs.build_type }} || lunch ${{ github.event.inputs.device_codename }}-${{ github.event.inputs.build_type }}
+            ${{ github.event.inputs.build_command }}
+          "
+
+      - name: Download Build Output
+        run: |
+          crave pull "out/target/product/${{ github.event.inputs.device_codename }}/*.zip" ./output/
+
+      - name: Upload ROM Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ROM-${{ github.event.inputs.device_codename }}
+          path: ./output/*.zip

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+    <!-- Device Tree -->
+    <!-- Replace 'username/device_oneplus_lexus' with your actual repository -->
+    <project path="device/oneplus/lexus" 
+             name="username/device_oneplus_lexus" 
+             remote="github" 
+             revision="lineage-21" />
+
+    <!-- Vendor Tree (Proprietary Blobs) -->
+    <!-- Replace 'username/vendor_oneplus_lexus' with your actual repository -->
+    <project path="vendor/oneplus/lexus" 
+             name="username/vendor_oneplus_lexus" 
+             remote="github" 
+             revision="lineage-21" />
+
+    <!-- Kernel Tree / Prebuilt Kernel -->
+    <!-- Replace 'username/kernel_oneplus_smXXXX' with your actual repository -->
+    <project path="kernel/oneplus/smXXXX" 
+             name="username/kernel_oneplus_smXXXX" 
+             remote="github" 
+             revision="lineage-21" />
+
+    <!-- Hardware / Common Trees (if required by OnePlus/Oplus) -->
+    <!--
+    <project path="hardware/oplus" 
+             name="LineageOS/android_hardware_oplus" 
+             remote="github" 
+             revision="lineage-21" />
+    -->
+</manifest>
