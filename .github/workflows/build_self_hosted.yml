@@ -33,27 +33,16 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Build Environment
+      - name: Build ROM
         run: |
           mkdir -p ~/android-rom
           cd ~/android-rom
-          
-          # Initialize ROM source
-          repo init -u ${{ github.event.inputs.rom_manifest }} -b ${{ github.event.inputs.rom_branch }} --git-lfs
-          
-          # Setup local manifests
-          mkdir -p .repo/local_manifests
-          cp $GITHUB_WORKSPACE/manifests/nord5.xml .repo/local_manifests/nord5.xml
-          
-          # Sync trees
-          repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
-
-      - name: Compile ROM
-        run: |
-          cd ~/android-rom
-          source build/envsetup.sh
-          lunch lunaris_${{ github.event.inputs.device_codename }}-${{ github.event.inputs.build_type }} || lunch lineage_${{ github.event.inputs.device_codename }}-${{ github.event.inputs.build_type }} || lunch ${{ github.event.inputs.device_codename }}-${{ github.event.inputs.build_type }}
-          ${{ github.event.inputs.build_command }}
+          bash $GITHUB_WORKSPACE/scripts/build_rom.sh \
+            "${{ github.event.inputs.rom_manifest }}" \
+            "${{ github.event.inputs.rom_branch }}" \
+            "${{ github.event.inputs.device_codename }}" \
+            "${{ github.event.inputs.build_type }}" \
+            "${{ github.event.inputs.build_command }}"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4

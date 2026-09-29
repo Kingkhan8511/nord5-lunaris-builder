@@ -42,19 +42,8 @@ jobs:
 
       - name: Trigger Build on Crave
         run: |
-          crave run -- "
-            set -e
-            rm -rf .repo/local_manifests
-            mkdir -p .repo/local_manifests
-            cp manifests/nord5.xml .repo/local_manifests/nord5.xml
-
-            repo init -u ${{ github.event.inputs.rom_manifest }} -b ${{ github.event.inputs.rom_branch }} --git-lfs
-            repo sync -c -j\$(nproc --all) --force-sync --no-clone-bundle --no-tags
-
-            source build/envsetup.sh
-            lunch lunaris_${{ github.event.inputs.device_codename }}-${{ github.event.inputs.build_type }} || lunch lineage_${{ github.event.inputs.device_codename }}-${{ github.event.inputs.build_type }} || lunch ${{ github.event.inputs.device_codename }}-${{ github.event.inputs.build_type }}
-            ${{ github.event.inputs.build_command }}
-          "
+          crave push scripts/build_rom.sh /tmp/build_rom.sh
+          crave run -- "bash /tmp/build_rom.sh '${{ github.event.inputs.rom_manifest }}' '${{ github.event.inputs.rom_branch }}' '${{ github.event.inputs.device_codename }}' '${{ github.event.inputs.build_type }}' '${{ github.event.inputs.build_command }}'"
 
       - name: Download Build Output
         run: |
