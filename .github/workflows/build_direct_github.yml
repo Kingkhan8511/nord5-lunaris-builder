@@ -35,15 +35,29 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Free Disk Space (Maximize Runner Storage)
-        uses: easimon/maximize-build-space@master
-        with:
-          root-reserve-mb: 2048
-          swap-size-mb: 10240
-          remove-dotnet: 'true'
-          remove-android: 'true'
-          remove-haskell: 'true'
-          remove-docker-images: 'true'
+      - name: Free Disk Space (Native Unified Cleanup)
+        run: |
+          echo ">>> Storage before cleanup:"
+          df -h /
+
+          echo ">>> Removing heavy preinstalled packages..."
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo docker system prune -af --volumes || true
+          sudo apt-get clean || true
+
+          echo ">>> Storage after cleanup:"
+          df -h /
+
+      - name: Setup 12GB Swap Memory
+        run: |
+          sudo fallocate -l 12G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=12288
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          free -h
 
       - name: Install Build Tools & Dependencies
         run: |
